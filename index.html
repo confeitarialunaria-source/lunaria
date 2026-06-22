@@ -1261,7 +1261,6 @@
   <button class="active" onclick="showPage('cones')">🍦 Cones</button>
   <button onclick="showPage('brownies')">🍫 Brownies</button>
   <button onclick="showPage('meus-pedidos')">📦 Meus Pedidos</button>
-  <button onclick="showPage('admin-login')">🔐 Admin</button>
 </nav>
 
 <!-- ===== MENU PAGE - CONES ===== -->
@@ -1443,7 +1442,7 @@ function getCustomerToken() {
 }
 
 // ============================================================
-//  DATA — produtos padrão (mesmos do cardápio)
+//  DATA — produtos padrão (usados só na primeira migração pro banco)
 // ============================================================
 const DEFAULT_PRODUCTS = [
   { id: 'c1', category: 'cones', name: 'Ninho com Nutella', desc: 'Ninho com creme de avelã tradicional', mini: 8, grande: 12 },
@@ -1465,7 +1464,7 @@ const DEFAULT_PRODUCTS = [
 // ============================================================
 //  STATE
 // ============================================================
-let products = JSON.parse(localStorage.getItem('lunaria_products') || 'null') || DEFAULT_PRODUCTS;
+let products = [];
 let cart     = [];
 let isAdmin  = false;
 let orderFilter = 'todos';
@@ -1473,10 +1472,46 @@ let allOrdersCache = [];
 let productPhotos = {};   // { product_id: photo_url }
 let reviewsCache  = [];   // todas as reviews aprovadas (público)
 let pendingReviewsCache = []; // reviews pendentes (admin)
+let productsLoaded = false;
 const ADMIN_PASSWORD = 'lunaria2024';
 
-function saveProductsLocal() {
-  localStorage.setItem('lunaria_products', JSON.stringify(products));
+// Busca produtos do Supabase. Se a tabela estiver vazia (primeira vez),
+// migra automaticamente a lista padrão para o banco.
+async function loadProducts(forceReload) {
+  if (productsLoaded && !forceReload) return;
+
+  const { data, error } = await supabaseClient
+    .from('products')
+    .select('*')
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error(error);
+    showToast('⚠ Erro ao carregar produtos.');
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    // Primeira vez: migra os produtos padrão para o banco
+    const toInsert = DEFAULT_PRODUCTS.map(p => ({
+      id: p.id, category: p.category, name: p.name,
+      desc_text: p.desc, mini: p.mini, grande: p.grande, active: true
+    }));
+    const { error: insertErr } = await supabaseClient.from('products').insert(toInsert);
+    if (insertErr) {
+      console.error(insertErr);
+      products = DEFAULT_PRODUCTS.map(p => ({ ...p, active: true }));
+    } else {
+      products = toInsert.map(p => ({ id: p.id, category: p.category, name: p.name, desc: p.desc_text, mini: p.mini, grande: p.grande, active: p.active }));
+    }
+  } else {
+    products = data.map(p => ({
+      id: p.id, category: p.category, name: p.name,
+      desc: p.desc_text, mini: Number(p.mini), grande: Number(p.grande), active: p.active
+    }));
+  }
+
+  productsLoaded = true;
 }
 
 // ============================================================
@@ -1488,17 +1523,17 @@ function showPage(page) {
   document.getElementById('admin-page').style.display = 'none';
   document.getElementById('cart-fab').style.display = 'flex';
 
-  document.querySelectorAll('nav button').forEach((b,i) => b.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   const navBtns = document.querySelectorAll('nav button');
 
   if (page === 'cones') {
     document.getElementById('page-cones').classList.add('active');
     navBtns[0].classList.add('active');
-    loadPhotosAndReviews().then(() => renderProducts('cones'));
+    Promise.all([loadProducts(), loadPhotosAndReviews()]).then(() => renderProducts('cones'));
   } else if (page === 'brownies') {
     document.getElementById('page-brownies').classList.add('active');
     navBtns[1].classList.add('active');
-    loadPhotosAndReviews().then(() => renderProducts('brownies'));
+    Promise.all([loadProducts(), loadPhotosAndReviews()]).then(() => renderProducts('brownies'));
   } else if (page === 'meus-pedidos') {
     document.getElementById('page-meus-pedidos').classList.add('active');
     navBtns[2].classList.add('active');
@@ -1509,10 +1544,18 @@ function showPage(page) {
     } else {
       document.getElementById('admin-login-page').style.display = 'block';
       document.getElementById('cart-fab').style.display = 'none';
-      navBtns[3].classList.add('active');
     }
   }
 }
+
+// Acesso secreto ao admin via link: seusite.com/#admin-lunaria
+function checkSecretAdminLink() {
+  if (window.location.hash === '#admin-lunaria') {
+    showPage('admin-login');
+  }
+}
+window.addEventListener('hashchange', checkSecretAdminLink);
+
 
 // ============================================================
 //  RENDER PRODUCTS (cardápio)
@@ -1545,7 +1588,7 @@ async function loadPhotosAndReviews() {
 function renderProducts(category) {
   const listId = category === 'cones' ? 'cones-list' : 'brownies-list';
   const container = document.getElementById(listId);
-  const filtered = products.filter(p => p.category === category);
+  const filtered = products.filter(p => p.category === category && p.active !== false);
 
   if (filtered.length === 0) {
     container.innerHTML = '<p style="text-align:center;opacity:0.5;padding:2rem;">Nenhum produto nesta categoria ainda.</p>';
@@ -2030,6 +2073,7 @@ function doLogin() {
 
 function doLogout() {
   isAdmin = false;
+  history.replaceState(null, '', window.location.pathname + window.location.search);
   showPage('cones');
 }
 
@@ -2038,7 +2082,7 @@ function showAdminPanel() {
   document.getElementById('admin-login-page').style.display = 'none';
   document.getElementById('cart-fab').style.display = 'none';
   document.getElementById('admin-page').style.display = 'block';
-  loadPhotosAndReviews().then(() => renderAdminProducts());
+  Promise.all([loadProducts(), loadPhotosAndReviews()]).then(() => renderAdminProducts());
   loadPendingReviews();
   renderAdminOrders();
 }
@@ -2049,7 +2093,7 @@ function showAdminTab(tab) {
 }
 
 // ============================================================
-//  ADMIN — PRODUCTS (locais) + FOTOS (Supabase)
+//  ADMIN — PRODUCTS (Supabase) + FOTOS (Supabase)
 // ============================================================
 function renderAdminProducts() {
   const container = document.getElementById('admin-product-list');
@@ -2062,20 +2106,28 @@ function renderAdminProducts() {
     const thumb = photoUrl
       ? `<img src="${photoUrl}" style="width:54px;height:54px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,162,39,0.3);margin-right:0.7rem;" />`
       : '';
+    const hiddenStyle = p.active === false ? 'opacity:0.45;' : '';
+    const hiddenBadge = p.active === false
+      ? `<span class="pending-badge" style="margin-left:0.4rem;">Oculto</span>`
+      : '';
+    const toggleBtn = p.active === false
+      ? `<button class="btn-edit" onclick="toggleProductActive('${p.id}', true)">🙈→👁 Mostrar</button>`
+      : `<button class="btn-edit" onclick="toggleProductActive('${p.id}', false)">👁→🙈 Ocultar</button>`;
     return `
-    <div class="admin-product-item">
+    <div class="admin-product-item" style="${hiddenStyle}">
       <div style="display:flex;align-items:flex-start;">
         ${thumb}
         <div>
-          <div class="category-badge">${p.category === 'cones' ? '🍦 Cones' : '🍫 Brownies'}</div>
+          <div class="category-badge">${p.category === 'cones' ? '🍦 Cones' : '🍫 Brownies'}</div>${hiddenBadge}
           <h4>${p.name}</h4>
           <p>${p.desc}</p>
           <div class="prices">Mini: R$ ${Number(p.mini).toFixed(2).replace('.',',')} · Grande: R$ ${Number(p.grande).toFixed(2).replace('.',',')}</div>
         </div>
       </div>
-      <div class="item-actions">
+      <div class="item-actions" style="flex-wrap:wrap;">
+        ${toggleBtn}
         <button class="btn-edit" onclick="editProduct('${p.id}')">✏</button>
-        <button class="btn-delete" onclick="deleteProduct('${p.id}')">🗑</button>
+        <button class="btn-delete" onclick="deleteProduct('${p.id}')">🗑 Apagar</button>
       </div>
     </div>
   `;
@@ -2113,14 +2165,21 @@ async function saveProduct() {
   let productId = id;
 
   if (id) {
+    const { error } = await supabaseClient
+      .from('products')
+      .update({ name, desc_text: desc, category, mini, grande })
+      .eq('id', id);
+    if (error) { console.error(error); showToast('⚠ Erro ao salvar produto.'); return; }
     const idx = products.findIndex(p => p.id === id);
     if (idx >= 0) products[idx] = { ...products[idx], name, desc, category, mini, grande };
   } else {
     productId = 'p' + Date.now();
-    products.push({ id: productId, category, name, desc, mini, grande });
+    const { error } = await supabaseClient
+      .from('products')
+      .insert({ id: productId, category, name, desc_text: desc, mini, grande, active: true });
+    if (error) { console.error(error); showToast('⚠ Erro ao criar produto.'); return; }
+    products.push({ id: productId, category, name, desc, mini, grande, active: true });
   }
-
-  saveProductsLocal();
 
   // Se uma foto nova foi escolhida, sobe pro Storage e salva o link
   if (prodPhotoFile) {
@@ -2170,12 +2229,47 @@ function editProduct(id) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function deleteProduct(id) {
-  if (!confirm('Deseja remover este produto?')) return;
-  products = products.filter(p => p.id !== id);
-  saveProductsLocal();
+// Esconde/mostra o produto no cardápio público sem apagar os dados
+async function toggleProductActive(id, makeActive) {
+  const { error } = await supabaseClient
+    .from('products')
+    .update({ active: makeActive })
+    .eq('id', id);
+
+  if (error) {
+    console.error(error);
+    showToast('⚠ Erro ao atualizar produto.');
+    return;
+  }
+
+  const idx = products.findIndex(p => p.id === id);
+  if (idx >= 0) products[idx].active = makeActive;
   renderAdminProducts();
-  showToast('🗑 Produto removido!');
+  showToast(makeActive ? '👁 Produto visível no cardápio novamente!' : '🙈 Produto ocultado do cardápio.');
+}
+
+// Apaga o produto definitivamente (sem volta)
+async function deleteProduct(id) {
+  if (!confirm('Tem certeza? Esta ação apaga o produto definitivamente e não pode ser desfeita.\n\nSe você só quer escondê-lo temporariamente, use o botão "Ocultar" em vez deste.')) return;
+
+  const { error } = await supabaseClient
+    .from('products')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error(error);
+    showToast('⚠ Erro ao apagar produto.');
+    return;
+  }
+
+  // Remove também a foto vinculada, se houver
+  await supabaseClient.from('product_photos').delete().eq('product_id', id);
+  delete productPhotos[id];
+
+  products = products.filter(p => p.id !== id);
+  renderAdminProducts();
+  showToast('🗑 Produto apagado definitivamente.');
 }
 
 function clearProductForm() {
@@ -2376,7 +2470,11 @@ function showToast(msg) {
 // ============================================================
 //  INIT
 // ============================================================
-renderProducts('cones');
+if (window.location.hash === '#admin-lunaria') {
+  showPage('admin-login');
+} else {
+  Promise.all([loadProducts(), loadPhotosAndReviews()]).then(() => renderProducts('cones'));
+}
 </script>
 </body>
 </html>
