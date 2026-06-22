@@ -1257,30 +1257,14 @@
 </header>
 
 <!-- ===== NAV ===== -->
-<nav>
-  <button class="active" onclick="showPage('cones')">🍦 Cones</button>
-  <button onclick="showPage('brownies')">🍫 Brownies</button>
+<nav id="main-nav">
+  <!-- gerado dinamicamente por renderNav() -->
   <button onclick="showPage('meus-pedidos')">📦 Meus Pedidos</button>
 </nav>
 
-<!-- ===== MENU PAGE - CONES ===== -->
-<div id="page-cones" class="page active">
-  <main>
-    <div class="section-header">
-      <h2>🍦 Cones Trufados</h2>
-    </div>
-    <div class="products-grid" id="cones-list"></div>
-  </main>
-</div>
-
-<!-- ===== MENU PAGE - BROWNIES ===== -->
-<div id="page-brownies" class="page">
-  <main>
-    <div class="section-header">
-      <h2>🍫 Brownies</h2>
-    </div>
-    <div class="products-grid" id="brownies-list"></div>
-  </main>
+<!-- ===== PÁGINAS DO CARDÁPIO (dinâmicas) ===== -->
+<div id="category-pages">
+  <!-- gerado dinamicamente por renderCategoryPages() -->
 </div>
 
 <!-- ===== MEUS PEDIDOS PAGE (cliente) ===== -->
@@ -1315,10 +1299,33 @@
   <div class="admin-header">
     <h1>🦇 Painel Admin — Lunária</h1>
     <div class="admin-header-btns">
+      <button class="btn-secondary" onclick="showAdminTab('categories')">Categorias</button>
       <button class="btn-secondary" onclick="showAdminTab('products')">Produtos</button>
       <button class="btn-secondary" onclick="showAdminTab('orders')">Pedidos</button>
       <button class="btn-secondary" onclick="doLogout()">Sair</button>
     </div>
+  </div>
+
+  <!-- CATEGORIES TAB -->
+  <div id="admin-categories-tab" class="admin-content" style="display:none;">
+    <h3 class="admin-section-title">➕ Nova Categoria</h3>
+    <div class="admin-form">
+      <input type="hidden" id="edit-cat-id" value="">
+      <div class="form-row">
+        <div class="input-group">
+          <label>Nome da Categoria</label>
+          <input type="text" id="cat-name" placeholder="Ex: Trufas" />
+        </div>
+        <div class="input-group">
+          <label>Emoji</label>
+          <input type="text" id="cat-emoji" placeholder="Ex: 🍬" maxlength="4"/>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="saveCategory()">💾 Salvar Categoria</button>
+      <button class="btn-secondary" style="margin-top:0.8rem;margin-left:0.5rem;" onclick="clearCategoryForm()">Limpar</button>
+    </div>
+    <h3 class="admin-section-title">📋 Categorias Cadastradas</h3>
+    <div class="admin-product-list" id="admin-categories-list"></div>
   </div>
 
   <!-- PRODUCTS TAB -->
@@ -1337,8 +1344,7 @@
       <div class="input-group">
         <label>Categoria</label>
         <select id="prod-category">
-          <option value="cones">Cones Trufados</option>
-          <option value="brownies">Brownies</option>
+          <!-- preenchido dinamicamente por renderCategorySelect() -->
         </select>
       </div>
       <div class="form-row">
@@ -1466,19 +1472,50 @@ const DEFAULT_PRODUCTS = [
 // ============================================================
 //  STATE
 // ============================================================
-let products = [];
-let cart     = [];
-let isAdmin  = false;
+const DEFAULT_CATEGORIES = [
+  { id: 'cones',    name: 'Cones Trufados', emoji: '🍦', sort_order: 1, active: true },
+  { id: 'brownies', name: 'Brownies',       emoji: '🍫', sort_order: 2, active: true },
+];
+
+let products   = [];
+let categories = [...DEFAULT_CATEGORIES]; // começa com as padrão já visíveis
+let cart       = [];
+let isAdmin    = false;
 let orderFilter = 'todos';
 let allOrdersCache = [];
-let productPhotos = {};   // { product_id: photo_url }
-let reviewsCache  = [];   // todas as reviews aprovadas (público)
-let pendingReviewsCache = []; // reviews pendentes (admin)
-let productsLoaded = false;
+let productPhotos = {};
+let reviewsCache  = [];
+let pendingReviewsCache = [];
+let productsLoaded   = false;
+let categoriesLoaded = false;
 const ADMIN_PASSWORD = 'lunaria2024';
 
-// Busca produtos do Supabase. Se a tabela estiver vazia (primeira vez),
-// migra automaticamente a lista padrão para o banco.
+// ============================================================
+//  LOAD CATEGORIES
+// ============================================================
+async function loadCategories(forceReload) {
+  if (categoriesLoaded && !forceReload) return;
+
+  const { data, error } = await supabaseClient
+    .from('categories')
+    .select('*')
+    .order('sort_order', { ascending: true });
+
+  if (error) { console.error(error); return; }
+
+  if (data && data.length > 0) {
+    // Usa as do banco (inclui as padrão que foram inseridas pelo SQL)
+    categories = data;
+  } else {
+    // Banco vazio: usa as padrão em memória
+    categories = [...DEFAULT_CATEGORIES];
+  }
+  categoriesLoaded = true;
+}
+
+// ============================================================
+//  LOAD PRODUCTS
+// ============================================================
 async function loadProducts(forceReload) {
   if (productsLoaded && !forceReload) return;
 
@@ -1487,14 +1524,9 @@ async function loadProducts(forceReload) {
     .select('*')
     .order('created_at', { ascending: true });
 
-  if (error) {
-    console.error(error);
-    showToast('⚠ Erro ao carregar produtos.');
-    return;
-  }
+  if (error) { console.error(error); showToast('⚠ Erro ao carregar produtos.'); return; }
 
   if (!data || data.length === 0) {
-    // Primeira vez: migra os produtos padrão para o banco
     const toInsert = DEFAULT_PRODUCTS.map(p => ({
       id: p.id, category: p.category, name: p.name,
       desc_text: p.desc, mini: p.mini, grande: p.grande, active: true
@@ -1517,6 +1549,55 @@ async function loadProducts(forceReload) {
 }
 
 // ============================================================
+//  RENDER NAV + CATEGORY PAGES (dinâmicos)
+// ============================================================
+function renderNav(activeCategoryId) {
+  const nav = document.getElementById('main-nav');
+  const catBtns = categories
+    .filter(c => c.active !== false)
+    .map(c => `<button onclick="showCategoryPage('${c.id}')" id="nav-btn-${c.id}">${c.emoji} ${c.name}</button>`)
+    .join('');
+  nav.innerHTML = catBtns
+    + `<button onclick="showPage('meus-pedidos')" id="nav-btn-meus-pedidos">📦 Meus Pedidos</button>`;
+
+  if (activeCategoryId) {
+    const activeBtn = document.getElementById(`nav-btn-${activeCategoryId}`);
+    if (activeBtn) activeBtn.classList.add('active');
+  }
+}
+
+function renderCategoryPages() {
+  const container = document.getElementById('category-pages');
+  container.innerHTML = categories
+    .filter(c => c.active !== false)
+    .map(c => `
+      <div id="page-cat-${c.id}" class="page">
+        <main>
+          <div class="section-header">
+            <h2>${c.emoji} ${c.name}</h2>
+          </div>
+          <div class="products-grid" id="list-${c.id}"></div>
+        </main>
+      </div>
+    `).join('');
+}
+
+function showCategoryPage(categoryId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('admin-login-page').style.display = 'none';
+  document.getElementById('admin-page').style.display = 'none';
+  document.getElementById('cart-fab').style.display = 'flex';
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+
+  const pageEl = document.getElementById(`page-cat-${categoryId}`);
+  if (pageEl) pageEl.classList.add('active');
+  const btnEl = document.getElementById(`nav-btn-${categoryId}`);
+  if (btnEl) btnEl.classList.add('active');
+
+  renderProducts(categoryId);
+}
+
+// ============================================================
 //  PAGE ROUTING
 // ============================================================
 function showPage(page) {
@@ -1524,21 +1605,12 @@ function showPage(page) {
   document.getElementById('admin-login-page').style.display = 'none';
   document.getElementById('admin-page').style.display = 'none';
   document.getElementById('cart-fab').style.display = 'flex';
-
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  const navBtns = document.querySelectorAll('nav button');
 
-  if (page === 'cones') {
-    document.getElementById('page-cones').classList.add('active');
-    navBtns[0].classList.add('active');
-    Promise.all([loadProducts(), loadPhotosAndReviews()]).then(() => renderProducts('cones'));
-  } else if (page === 'brownies') {
-    document.getElementById('page-brownies').classList.add('active');
-    navBtns[1].classList.add('active');
-    Promise.all([loadProducts(), loadPhotosAndReviews()]).then(() => renderProducts('brownies'));
-  } else if (page === 'meus-pedidos') {
+  if (page === 'meus-pedidos') {
     document.getElementById('page-meus-pedidos').classList.add('active');
-    navBtns[2].classList.add('active');
+    const btn = document.getElementById('nav-btn-meus-pedidos');
+    if (btn) btn.classList.add('active');
     loadMeusPedidos();
   } else if (page === 'admin-login') {
     if (isAdmin) {
@@ -1550,14 +1622,9 @@ function showPage(page) {
   }
 }
 
-// Acesso secreto ao admin via link: seusite.com/#admin-lunaria
-function checkSecretAdminLink() {
-  if (window.location.hash === '#admin-lunaria') {
-    showPage('admin-login');
-  }
-}
-window.addEventListener('hashchange', checkSecretAdminLink);
-
+window.addEventListener('hashchange', () => {
+  if (window.location.hash === '#admin-lunaria') showPage('admin-login');
+});
 
 // ============================================================
 //  RENDER PRODUCTS (cardápio)
@@ -1567,30 +1634,24 @@ function starsHtml(n) {
 }
 
 async function loadPhotosAndReviews() {
-  // Fotos dos produtos
   const { data: photos, error: photoErr } = await supabaseClient
-    .from('product_photos')
-    .select('*');
+    .from('product_photos').select('*');
   if (!photoErr && photos) {
     productPhotos = {};
     photos.forEach(p => { productPhotos[p.product_id] = p.photo_url; });
   }
 
-  // Avaliações aprovadas (públicas)
   const { data: revs, error: revErr } = await supabaseClient
-    .from('reviews')
-    .select('*')
+    .from('reviews').select('*')
     .eq('approved', true)
     .order('created_at', { ascending: false });
-  if (!revErr && revs) {
-    reviewsCache = revs;
-  }
+  if (!revErr && revs) reviewsCache = revs;
 }
 
-function renderProducts(category) {
-  const listId = category === 'cones' ? 'cones-list' : 'brownies-list';
-  const container = document.getElementById(listId);
-  const filtered = products.filter(p => p.category === category && p.active !== false);
+function renderProducts(categoryId) {
+  const container = document.getElementById(`list-${categoryId}`);
+  if (!container) return;
+  const filtered = products.filter(p => p.category === categoryId && p.active !== false);
 
   if (filtered.length === 0) {
     container.innerHTML = '<p style="text-align:center;opacity:0.5;padding:2rem;">Nenhum produto nesta categoria ainda.</p>';
@@ -2073,25 +2134,160 @@ function doLogin() {
   }
 }
 
-function doLogout() {
-  isAdmin = false;
-  history.replaceState(null, '', window.location.pathname + window.location.search);
-  showPage('cones');
-}
-
 function showAdminPanel() {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('admin-login-page').style.display = 'none';
   document.getElementById('cart-fab').style.display = 'none';
   document.getElementById('admin-page').style.display = 'block';
-  Promise.all([loadProducts(), loadPhotosAndReviews()]).then(() => renderAdminProducts());
+  Promise.all([loadCategories(true), loadProducts(true), loadPhotosAndReviews()])
+    .then(() => {
+      renderAdminCategories();
+      renderCategorySelectInForm();
+      renderAdminProducts();
+    });
   loadPendingReviews();
   renderAdminOrders();
+  showAdminTab('products');
 }
 
 function showAdminTab(tab) {
-  document.getElementById('admin-products-tab').style.display = tab === 'products' ? 'block' : 'none';
-  document.getElementById('admin-orders-tab').style.display   = tab === 'orders'   ? 'block' : 'none';
+  document.getElementById('admin-categories-tab').style.display = tab === 'categories' ? 'block' : 'none';
+  document.getElementById('admin-products-tab').style.display   = tab === 'products'   ? 'block' : 'none';
+  document.getElementById('admin-orders-tab').style.display     = tab === 'orders'     ? 'block' : 'none';
+}
+
+function doLogout() {
+  isAdmin = false;
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+  // Volta para a primeira categoria ativa, ou meus-pedidos se não houver
+  const first = categories.find(c => c.active !== false);
+  if (first) showCategoryPage(first.id);
+  else showPage('meus-pedidos');
+}
+
+// ============================================================
+//  ADMIN — CATEGORIES
+// ============================================================
+async function loadAdminCategories() {
+  await loadCategories(true);
+  renderAdminCategories();
+  renderCategorySelectInForm();
+}
+
+function renderCategorySelectInForm() {
+  const sel = document.getElementById('prod-category');
+  if (!sel) return;
+  sel.innerHTML = categories
+    .filter(c => c.active !== false)
+    .map(c => `<option value="${c.id}">${c.emoji} ${c.name}</option>`)
+    .join('');
+}
+
+function renderAdminCategories() {
+  const container = document.getElementById('admin-categories-list');
+  if (!container) return;
+  if (categories.length === 0) {
+    container.innerHTML = '<p style="opacity:0.5;text-align:center;padding:1rem;">Nenhuma categoria cadastrada.</p>';
+    return;
+  }
+  container.innerHTML = categories.map(c => {
+    const hiddenStyle = c.active === false ? 'opacity:0.45;' : '';
+    const hiddenBadge = c.active === false ? `<span class="pending-badge" style="margin-left:0.4rem;">Oculta</span>` : '';
+    const toggleBtn = c.active === false
+      ? `<button class="btn-edit" onclick="toggleCategoryActive('${c.id}', true)">🙈→👁 Mostrar</button>`
+      : `<button class="btn-edit" onclick="toggleCategoryActive('${c.id}', false)">👁→🙈 Ocultar</button>`;
+    return `
+    <div class="admin-product-item" style="${hiddenStyle}">
+      <div>
+        <span style="font-size:1.5rem;">${c.emoji}</span>
+        <strong style="margin-left:0.5rem;color:var(--creme);">${c.name}</strong>
+        ${hiddenBadge}
+      </div>
+      <div class="item-actions" style="flex-wrap:wrap;">
+        ${toggleBtn}
+        <button class="btn-edit" onclick="editCategory('${c.id}')">✏</button>
+        <button class="btn-delete" onclick="deleteCategory('${c.id}')">🗑 Apagar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function saveCategory() {
+  const id = document.getElementById('edit-cat-id').value;
+  const name = document.getElementById('cat-name').value.trim();
+  const emoji = document.getElementById('cat-emoji').value.trim() || '🍫';
+
+  if (!name) { showToast('⚠ Informe o nome da categoria!'); return; }
+
+  if (id) {
+    const { error } = await supabaseClient
+      .from('categories').update({ name, emoji }).eq('id', id);
+    if (error) { console.error(error); showToast('⚠ Erro ao salvar categoria.'); return; }
+    const idx = categories.findIndex(c => c.id === id);
+    if (idx >= 0) { categories[idx].name = name; categories[idx].emoji = emoji; }
+  } else {
+    const newId = name.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'')
+      + '_' + Date.now().toString(36);
+    const sortOrder = categories.length + 1;
+    const { error } = await supabaseClient
+      .from('categories').insert({ id: newId, name, emoji, sort_order: sortOrder, active: true });
+    if (error) { console.error(error); showToast('⚠ Erro ao criar categoria.'); return; }
+    categories.push({ id: newId, name, emoji, sort_order: sortOrder, active: true });
+  }
+
+  clearCategoryForm();
+  renderAdminCategories();
+  renderCategorySelectInForm();
+  // Atualiza nav e páginas do cardápio sem recarregar tudo
+  renderNav(null);
+  renderCategoryPages();
+  showToast('✓ Categoria salva!');
+}
+
+function editCategory(id) {
+  const c = categories.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('edit-cat-id').value = id;
+  document.getElementById('cat-name').value = c.name;
+  document.getElementById('cat-emoji').value = c.emoji;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function toggleCategoryActive(id, makeActive) {
+  const { error } = await supabaseClient
+    .from('categories').update({ active: makeActive }).eq('id', id);
+  if (error) { console.error(error); showToast('⚠ Erro ao atualizar categoria.'); return; }
+  const idx = categories.findIndex(c => c.id === id);
+  if (idx >= 0) categories[idx].active = makeActive;
+  renderAdminCategories();
+  renderNav(null);
+  renderCategoryPages();
+  showToast(makeActive ? '👁 Categoria visível!' : '🙈 Categoria ocultada.');
+}
+
+async function deleteCategory(id) {
+  const prods = products.filter(p => p.category === id);
+  const msg = prods.length > 0
+    ? `Esta categoria tem ${prods.length} produto(s) cadastrado(s). Apagar a categoria NÃO apaga os produtos, mas eles ficarão sem categoria visível.\n\nTem certeza?`
+    : 'Tem certeza que deseja apagar esta categoria?';
+  if (!confirm(msg)) return;
+
+  const { error } = await supabaseClient.from('categories').delete().eq('id', id);
+  if (error) { console.error(error); showToast('⚠ Erro ao apagar categoria.'); return; }
+  categories = categories.filter(c => c.id !== id);
+  renderAdminCategories();
+  renderCategorySelectInForm();
+  renderNav(null);
+  renderCategoryPages();
+  showToast('🗑 Categoria apagada.');
+}
+
+function clearCategoryForm() {
+  document.getElementById('edit-cat-id').value = '';
+  document.getElementById('cat-name').value = '';
+  document.getElementById('cat-emoji').value = '';
 }
 
 // ============================================================
@@ -2475,7 +2671,21 @@ function showToast(msg) {
 if (window.location.hash === '#admin-lunaria') {
   showPage('admin-login');
 } else {
-  Promise.all([loadProducts(), loadPhotosAndReviews()]).then(() => renderProducts('cones'));
+  // Renderiza imediatamente com as categorias padrão (Cones + Brownies)
+  // enquanto o banco carrega em segundo plano
+  renderCategoryPages();
+  renderNav(null);
+  const firstDefault = categories.find(c => c.active !== false);
+  if (firstDefault) showCategoryPage(firstDefault.id);
+
+  // Depois atualiza tudo com os dados reais do banco
+  Promise.all([loadCategories(), loadProducts(), loadPhotosAndReviews()])
+    .then(() => {
+      renderCategoryPages();
+      renderNav(null);
+      const first = categories.find(c => c.active !== false);
+      if (first) showCategoryPage(first.id);
+    });
 }
 </script>
 </body>
