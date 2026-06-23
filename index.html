@@ -1434,7 +1434,7 @@
 //  SUPABASE CONFIG
 // ============================================================
 const SUPABASE_URL = 'https://akhxtgrjtdcttbfurcvu.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_11omiMA4oLibuPcLhK0U9g_lF_78uIh';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFraHh0Z3JqdGRjdHRiZnVyY3Z1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTU1OTMsImV4cCI6MjA5NzYzMTU5M30.pkns5P_6k3fgzaesASAKIjnnBOQC6--hFoOh_ZMbeIk';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ============================================================
@@ -1789,8 +1789,17 @@ function previewReviewPhotos(productId) {
 async function uploadImageToStorage(file, folderPrefix) {
   const ext = file.name.split('.').pop();
   const path = `${folderPrefix}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
-  const { error } = await supabaseClient.storage.from('imagens').upload(path, file);
-  if (error) { console.error(error); return null; }
+  
+  const { data: uploadData, error } = await supabaseClient.storage
+    .from('imagens')
+    .upload(path, file, { upsert: true });
+    
+  if (error) {
+    console.error('Erro no upload:', error.message, error);
+    showToast(`⚠ Erro ao enviar imagem: ${error.message}`);
+    return null;
+  }
+  
   const { data } = supabaseClient.storage.from('imagens').getPublicUrl(path);
   return data.publicUrl;
 }
@@ -2403,6 +2412,7 @@ async function saveProduct() {
   }
 
   const statusEl = document.getElementById('prod-photo-status');
+  const fileToUpload = prodPhotoFile; // salva referência antes de qualquer limpeza
   let productId = id;
 
   if (id) {
@@ -2422,30 +2432,35 @@ async function saveProduct() {
     products.push({ id: productId, category, name, desc, mini, grande, active: true });
   }
 
-  // Se uma foto nova foi escolhida, sobe pro Storage e salva o link
-  if (prodPhotoFile) {
+  // Limpa o formulário ANTES do upload (mas já salvamos a referência do arquivo)
+  clearProductForm();
+  showToast('✓ Produto salvo!');
+  renderAdminProducts();
+
+  // Agora faz o upload da foto se houver
+  if (fileToUpload) {
     if (statusEl) statusEl.textContent = 'Enviando foto...';
-    const url = await uploadImageToStorage(prodPhotoFile, 'products');
+    showToast('📷 Enviando foto...');
+
+    const url = await uploadImageToStorage(fileToUpload, 'products');
+
     if (url) {
       const { error } = await supabaseClient
         .from('product_photos')
         .upsert({ product_id: productId, photo_url: url, updated_at: new Date().toISOString() });
+
       if (!error) {
         productPhotos[productId] = url;
-        if (statusEl) statusEl.textContent = '✓ Foto salva!';
+        renderAdminProducts(); // atualiza lista com a foto nova
+        showToast('✓ Foto salva com sucesso!');
       } else {
-        console.error(error);
-        if (statusEl) statusEl.textContent = '⚠ Erro ao salvar a foto.';
+        console.error('Erro ao salvar foto no banco:', error);
+        showToast('⚠ Foto enviada mas erro ao salvar link: ' + error.message);
       }
-    } else if (statusEl) {
-      statusEl.textContent = '⚠ Erro ao enviar a foto.';
+    } else {
+      showToast('⚠ Não foi possível enviar a foto.');
     }
-    prodPhotoFile = null;
   }
-
-  clearProductForm();
-  renderAdminProducts();
-  showToast('✓ Produto salvo!');
 }
 
 function editProduct(id) {
