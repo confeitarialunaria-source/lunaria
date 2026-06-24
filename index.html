@@ -4,248 +4,239 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lunária Confeitaria</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Crimson+Text:ital,wght=0,400;0,600;1,400&family=MedievalSharp&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
     :root {
-      --vinho-profundo: #2C0C11;
-      --vinho-principal: #5C1321;
-      --vinho-suave: #822034;
-      --dourado-suave: #D4AF37;
-      --creme-claro: #FFFBF4;
-      --creme-quente: #F7EAD3;
-      --texto-escuro: #3A2326;
-      --sombra: rgba(44, 12, 17, 0.08);
-      --transicao: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --vinho: #6B0D1A;
+      --vinho-escuro: #3D0710;
+      --vinho-medio: #8B1220;
+      --dourado: #C9A227;
+      --dourado-claro: #E8C84A;
+      --dourado-escuro: #9A7A1A;
+      --marrom: #5C3317;
+      --creme: #F5E6C8;
+      --creme-escuro: #E8D4A8;
+      --branco: #FFF9F0;
     }
 
-    * { 
-      margin: 0; 
-      padding: 0; 
-      box-sizing: border-box; 
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background-color: var(--creme-claro);
-      color: var(--texto-escuro);
-      font-family: 'Quicksand', sans-serif;
-      font-weight: 500;
-      line-height: 1.6;
+      background-color: var(--vinho-escuro);
+      color: var(--creme);
+      font-family: 'Quicksand', sans-serif; /* Transição para fonte aconchegante */
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
       overflow-x: hidden;
     }
 
     /* ============================================================
-       LANDING PAGE HEADER (MODERNO E ORGÂNICO)
+       CABEÇALHO ORIGINAL PRESERVADO
        ============================================================ */
-    .hero-banner {
-      background: linear-gradient(135deg, var(--vinho-profundo), var(--vinho-principal));
-      color: var(--creme-quente);
+    header {
+      background: linear-gradient(135deg, var(--vinho-escuro), var(--vinho));
+      padding: 30px 20px;
       text-align: center;
-      padding: 5rem 1.5rem;
+      border-bottom: 3px double var(--dourado);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
       position: relative;
-      border-bottom: 3px solid var(--dourado-suave);
     }
 
-    .hero-banner h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 3.5rem;
-      font-weight: 700;
-      letter-spacing: -1px;
-      margin-bottom: 0.5rem;
-      color: var(--creme-claro);
+    header h1 {
+      font-family: 'Cinzel Decorative', serif;
+      font-weight: 900;
+      color: var(--dourado);
+      font-size: 2.8rem;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 10px var(--dourado-escuro);
+      margin-bottom: 5px;
     }
 
-    .hero-banner p {
-      font-size: 1.2rem;
-      font-style: italic;
-      opacity: 0.9;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    /* ============================================================
-       SEÇÃO DE PROMOÇÕES / PÔSTER
-       ============================================================ */
-    .promo-section {
-      max-width: 1200px;
-      margin: -2.5rem auto 2rem auto;
-      padding: 0 1.5rem;
-      position: relative;
-      z-index: 10;
-    }
-
-    .promo-poster {
-      background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
-      border-radius: 16px;
-      padding: 3rem 2rem;
-      color: white;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .promo-poster h2 {
-      font-family: 'Playfair Display', serif;
-      font-size: 2.5rem;
-      color: var(--creme-quente);
-      margin-bottom: 1rem;
-    }
-
-    .promo-poster p {
+    header p {
+      font-family: 'MedievalSharp', cursive;
+      color: var(--creme-escuro);
       font-size: 1.1rem;
-      margin-bottom: 1.5rem;
-      max-width: 500px;
-      margin-left: auto;
-      margin-right: auto;
+      letter-spacing: 1px;
     }
 
     /* ============================================================
-       NAVEGAÇÃO POR CATEGORIAS (FORMATO RETANGULAR DA SUA REFERÊNCIA)
+       NAVEGAÇÃO DE CATEGORIAS (FORMATO RETANGULAR ORGÂNICO)
        ============================================================ */
-    .categories-nav-container {
-      max-width: 1200px;
-      margin: 2rem auto;
-      padding: 0 1.5rem;
-    }
-
-    .categories-nav {
+    nav {
       display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      padding-bottom: 10px;
-      scrollbar-width: none; /* Firefox */
+      justify-content: center;
+      gap: 10px;
+      padding: 15px;
+      background-color: rgba(61, 7, 16, 0.8);
+      position: sticky;
+      top: 0;
+      z-index: 99;
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(201, 162, 39, 0.3);
     }
 
-    .categories-nav::-webkit-scrollbar {
-      display: none; /* Chrome/Safari */
-    }
-
-    .category-btn {
-      background-color: var(--creme-quente);
-      color: var(--vinho-principal);
-      border: 1px solid rgba(92, 19, 33, 0.15);
-      padding: 12px 24px;
-      border-radius: 8px; /* Formato plano/retangular suavizado, sem círculos */
+    .nav-btn {
+      background: transparent;
+      border: 1px solid var(--dourado-escuro);
+      color: var(--creme-escuro);
+      padding: 10px 20px;
+      cursor: pointer;
       font-family: 'Quicksand', sans-serif;
       font-weight: 600;
-      font-size: 1rem;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: var(--transicao);
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+      border-radius: 0px; /* Removido o arredondado conforme solicitado */
     }
 
-    .category-btn.active, .category-btn:hover {
-      background-color: var(--vinho-principal);
-      color: var(--creme-claro);
-      box-shadow: 0 4px 12px rgba(92, 19, 33, 0.2);
+    .nav-btn:hover, .nav-btn.active {
+      background-color: var(--dourado);
+      color: var(--vinho-escuro);
+      border-color: var(--dourado-claro);
+      box-shadow: 0 0 12px rgba(201, 162, 39, 0.4);
     }
 
     /* ============================================================
-       GRID E CARDS DE PRODUTOS
+       LANDING PAGES E LAYOUT DE PRODUTOS
        ============================================================ */
-    .products-container {
+    main {
+      flex: 1;
       max-width: 1200px;
-      margin: 0 auto 4rem auto;
-      padding: 0 1.5rem;
+      width: 100%;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.5s ease-in-out; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .products-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 2rem;
+      gap: 30px;
+      padding: 10px 0;
     }
 
+    /* CARDS MODERNOS E ORGÂNICOS */
     .product-card {
-      background: white;
-      border-radius: 12px;
+      background: linear-gradient(145deg, rgba(107, 13, 26, 0.4), rgba(61, 7, 16, 0.6));
+      border: 1px solid rgba(201, 162, 39, 0.2);
+      border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 6px 16px var(--sombra);
-      border: 1px solid rgba(92, 19, 33, 0.05);
-      cursor: pointer;
-      transition: var(--transicao);
       display: flex;
       flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+      cursor: pointer;
+      position: relative;
     }
 
     .product-card:hover {
       transform: translateY(-6px);
-      box-shadow: 0 12px 24px rgba(44, 12, 17, 0.12);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(201, 162, 39, 0.15);
+      border-color: rgba(201, 162, 39, 0.5);
     }
 
-    .product-image-wrapper {
+    .product-img-container {
+      width: 100%;
+      height: 220px;
+      overflow: hidden;
       position: relative;
-      padding-top: 100%; /* Quadradinho perfeito */
-      background-color: var(--creme-quente);
+      background-color: rgba(0,0,0,0.2);
     }
 
-    .product-image {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
+    .product-card img {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .product-card:hover img {
+      transform: scale(1.06);
     }
 
     .product-info {
-      padding: 1.5rem;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       flex-grow: 1;
     }
 
     .product-title {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Crimson Text', serif;
       font-size: 1.4rem;
-      color: var(--vinho-profundo);
-      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--branco);
+      margin-bottom: 8px;
+      line-height: 1.2;
     }
 
-    .product-description-excerpt {
-      font-size: 0.95rem;
-      color: #666;
-      margin-bottom: 1rem;
+    .product-desc {
+      font-size: 0.9rem;
+      color: var(--creme-escuro);
+      line-height: 1.5;
+      margin-bottom: 15px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
 
-    .product-footer {
+    .product-meta {
       margin-top: auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      pt: 10px;
     }
 
     .product-price {
       font-size: 1.25rem;
       font-weight: 700;
-      color: var(--vinho-suave);
+      color: var(--dourado-claro);
     }
 
-    .view-more-badge {
+    .btn-add {
+      background-color: var(--vinho-medio);
+      color: var(--branco);
+      border: 1px solid var(--dourado);
+      padding: 8px 14px;
       font-size: 0.85rem;
-      color: var(--dourado-suave);
       font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+    }
+
+    .btn-add:hover {
+      background-color: var(--dourado);
+      color: var(--vinho-escuro);
+      box-shadow: 0 0 10px var(--dourado);
     }
 
     /* ============================================================
-       MODAL DE DETALHES DO PRODUTO (VER MAIS)
+       MODAL DE DETALHES DO PRODUTO (VER MAIS) - NOVO!
        ============================================================ */
     .modal-overlay {
       position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(44, 12, 17, 0.6);
-      backdrop-filter: blur(4px);
-      z-index: 1000;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(6px);
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
+      z-index: 1000;
       opacity: 0;
       pointer-events: none;
-      transition: var(--transicao);
-      padding: 1rem;
+      transition: opacity 0.3s ease;
     }
 
     .modal-overlay.active {
@@ -254,281 +245,374 @@
     }
 
     .modal-card {
-      background: var(--creme-claro);
-      max-width: 700px;
-      width: 100%;
-      border-radius: 16px;
+      background: linear-gradient(135deg, var(--vinho-escuro), #4a0a13);
+      border: 2px solid var(--dourado);
+      width: 90%;
+      max-width: 650px;
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
       position: relative;
       transform: scale(0.9);
-      transition: var(--transicao);
-      max-height: 90vh;
-      display: flex;
-      flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     .modal-overlay.active .modal-card {
       transform: scale(1);
     }
 
-    .modal-close-btn {
+    .modal-close {
       position: absolute;
-      top: 1rem; right: 1rem;
-      background: rgba(255,255,255,0.8);
-      border: none; width: 36px; height: 36px;
-      border-radius: 50%; cursor: pointer;
-      font-size: 1.2rem; font-weight: bold;
-      z-index: 10; display: flex; align-items: center; justify-content: center;
-      color: var(--vinho-profundo);
+      top: 15px;
+      right: 15px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--dourado);
+      color: var(--dourado);
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      font-size: 1.2rem;
+      z-index: 10;
+      transition: all 0.2s ease;
     }
 
-    .modal-body {
-      overflow-y: auto;
+    .modal-close:hover {
+      background: var(--dourado);
+      color: var(--vinho-escuro);
     }
 
-    .modal-hero-image {
+    .modal-img {
       width: 100%;
       height: 300px;
       object-fit: cover;
-      background-color: var(--creme-quente);
+      border-bottom: 2px solid var(--dourado);
     }
 
-    .modal-content-padding {
-      padding: 2rem;
+    .modal-body {
+      padding: 25px;
     }
 
-    .modal-product-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 2.2rem;
-      color: var(--vinho-profundo);
-      margin-bottom: 0.5rem;
+    .modal-title {
+      font-family: 'Cinzel Decorative', serif;
+      color: var(--dourado);
+      font-size: 1.8rem;
+      margin-bottom: 10px;
     }
 
-    .modal-product-price {
-      font-size: 1.5rem;
+    .modal-full-desc {
+      font-size: 1rem;
+      color: var(--creme);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(201, 162, 39, 0.2);
+      padding-top: 15px;
+    }
+
+    /* ============================================================
+       CARRINHO E DEMAIS ESTILOS
+       ============================================================ */
+    .cart-summary {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: var(--dourado);
+      color: var(--vinho-escuro);
+      padding: 15px 25px;
       font-weight: 700;
-      color: var(--vinho-suave);
-      margin-bottom: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      display: none;
+      z-index: 98;
+      font-family: 'Quicksand', sans-serif;
+      transition: transform 0.2s ease;
     }
+    .cart-summary:hover { transform: scale(1.05); }
 
-    .modal-section-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.1rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--dourado-suave);
-      margin-bottom: 0.5rem;
-    }
-
-    .modal-description {
-      font-size: 1.05rem;
-      color: var(--texto-escuro);
-      margin-bottom: 2rem;
-    }
-
-    /* Galeria adicional dentro do Ver Mais */
-    .modal-gallery {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 2rem;
-    }
-
-    .modal-gallery-img {
-      width: 100%; height: 80px; object-fit: cover;
-      border-radius: 6px; background-color: var(--creme-quente);
-    }
-
-    .modal-action-btn {
-      display: block; width: 100%;
-      background: linear-gradient(135deg, var(--vinho-principal), var(--vinho-suave));
-      color: white; text-align: center; padding: 16px;
-      border-radius: 8px; font-weight: 600; font-size: 1.1rem;
-      text-decoration: none; border: none; cursor: pointer;
-      box-shadow: 0 4px 15px rgba(92, 19, 33, 0.3);
-      transition: var(--transicao);
-    }
-
-    .modal-action-btn:hover {
-      background: var(--vinho-profundo);
-    }
-
-    /* Toast Notification */
+    /* Toast */
     #toast {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px);
-      background-color: var(--vinho-profundo); color: var(--creme-claro);
-      padding: 12px 24px; border-radius: 30px; font-weight: 600;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: var(--transicao); z-index: 2000;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background-color: var(--creme);
+      color: var(--marrom);
+      padding: 12px 25px;
+      font-weight: 600;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 1001;
+      border-left: 5px solid var(--vinho);
     }
     #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Admin Login Simple Style */
+    .admin-box {
+      max-width: 400px;
+      margin: 80px auto;
+      background: rgba(107, 13, 26, 0.3);
+      padding: 30px;
+      border: 1px solid var(--dourado);
+      text-align: center;
+    }
+    .admin-box input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      background: var(--branco);
+      border: none;
+      font-family: 'Quicksand', sans-serif;
+    }
+    .admin-box button {
+      background: var(--dourado);
+      color: var(--vinho-escuro);
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
 
-  <header class="hero-banner">
-    <h1>Lunária Confeitaria</h1>
-    <p>Doces artesanais feitos com carinho, aroma aconchegante e um toque de magia.</p>
+  <header>
+    <h1>Lunária</h1>
+    <p>Confeitaria Artesanal & Mística</p>
   </header>
 
-  <section class="promo-section" id="promo-banner-area">
-    <div class="promo-poster">
-      <h2>Combo Encanto de Inverno</h2>
-      <p>Na compra de qualquer Brownie Artesanal, leve um Café Filtrado Gourmet pela metade do preço hoje!</p>
-    </div>
-  </section>
-
-  <div class="categories-nav-container">
-    <nav class="categories-nav" id="categories-tabs">
-      <button class="category-btn active">Todos</button>
-      <button class="category-btn">Cones Recheados</button>
-      <button class="category-btn">Brownies</button>
+  <nav id="category-nav">
     </nav>
-  </div>
 
-  <main class="products-container">
-    <div class="products-grid" id="products-list">
+  <main id="pages-container">
+    <div id="page-admin-login" class="page">
+      <div class="admin-box">
+        <h3>Portal Arcano</h3>
+        <input type="password" id="admin-password" placeholder="Chave de Acesso" />
+        <button onclick="loginAdmin()">Entrar</button>
       </div>
+    </div>
   </main>
 
   <div class="modal-overlay" id="product-modal" onclick="closeProductModal(event)">
     <div class="modal-card" onclick="event.stopPropagation()">
-      <button class="modal-close-btn" onclick="closeProductModal(forced=true)">&times;</button>
+      <button class="modal-close" onclick="closeProductModal(forced=true)">✕</button>
+      <img src="" alt="" class="modal-img" id="modal-product-img">
       <div class="modal-body">
-        <img src="" alt="" class="modal-hero-image" id="modal-img">
-        <div class="modal-content-padding">
-          <h2 class="modal-product-title" id="modal-title">Nome do Produto</h2>
-          <p class="modal-product-price" id="modal-price">R$ 0,00</p>
-          
-          <h3 class="modal-section-title">Sobre essa delícia</h3>
-          <p class="modal-description" id="modal-desc">Descrição completa do item.</p>
-
-          <h3 class="modal-section-title">Mais Ângulos</h3>
-          <div class="modal-gallery" id="modal-gallery-area">
-            <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=150&q=80" class="modal-gallery-img">
-            <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=150&q=80" class="modal-gallery-img">
-            <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=150&q=80" class="modal-gallery-img">
-          </div>
-
-          <button class="modal-action-btn" id="modal-order-btn">Pedir via WhatsApp</button>
+        <h2 class="modal-title" id="modal-product-title"></h2>
+        <p class="modal-full-desc" id="modal-product-desc"></p>
+        <div class="modal-footer">
+          <span class="product-price" id="modal-product-price"></span>
+          <button class="btn-add" id="modal-product-action">Adicionar ao Pedido</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="toast">✓ Mensagem</div>
+  <div class="cart-summary" id="cart-summary" onclick="checkoutWhatsApp()">
+    Ver Sacola (<span id="cart-count">0</span>)
+  </div>
 
+  <div id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // Seus dados mockados padrão (caso o banco de dados Supabase falte itens no início)
-    const mockCategories = [
-      { id: 'todos', name: 'Todos' },
-      { id: 'cones', name: 'Cones Recheados' },
-      { id: 'brownies', name: 'Brownies Especiais' }
-    ];
+    // Configurações do Supabase obtidas do seu arquivo original
+    const SUPABASE_URL = "https://wbmshfofg77777777777.supabase.co"; 
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... (sua chave original)";
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const mockProducts = [
-      {
-        id: 1,
-        category_id: 'cones',
-        title: 'Cone de Brigadeiro Belga',
-        description: 'Casquinha super crocante banhada em chocolate artesanal, recheada generosamente com o nosso autêntico brigadeiro cremoso feito com cacau nobre.',
-        price: 14.90,
-        image_url: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80'
-      },
-      {
-        id: 2,
-        category_id: 'brownies',
-        title: 'Brownie Triplo Chocolate',
-        description: 'Massa úmida, densa e com aquela casquinha perfeita por cima. Contém pedaços de chocolate meio amargo, ao leite e branco misturados na massa.',
-        price: 12.00,
-        image_url: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=500&q=80'
+    // Dados Locais / Cache
+    let categories = [
+      { id: 'cones', name: 'Cones Trufados', active: true },
+      { id: 'brownies', name: 'Brownies', active: true }
+    ];
+    let products = [];
+    let cart = {};
+
+    // ============================================================
+    //  INICIALIZAÇÃO & DADOS
+    // ============================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.location.hash === '#admin-lunaria') {
+        showPage('admin-login');
+      } else {
+        renderCategoryPages();
+        renderNav();
+        
+        // Carrega do banco de dados (suporta novas fotos adicionadas livremente)
+        Promise.all([loadCategories(), loadProducts()])
+          .then(() => {
+            renderCategoryPages();
+            renderNav();
+          })
+          .catch(err => console.log("Nota: Usando dados locais pré-renderizados.", err));
       }
-    ];
+    });
 
-    let activeCategory = 'todos';
+    async function loadCategories() {
+      const { data, error } = await _supabase.from('categories').select('*').order('id');
+      if (!error && data && data.length > 0) categories = data;
+    }
 
-    // RENDERIZAR ABAS DE CATEGORIA (Retangulares e modernas)
-    function renderCategories() {
-      const tabsArea = document.getElementById('categories-tabs');
-      tabsArea.innerHTML = '';
+    async function loadProducts() {
+      const { data, error } = await _supabase.from('products').select('*');
+      if (!error && data) products = data;
+    }
 
-      mockCategories.forEach(cat => {
+    // ============================================================
+    //  RENDERIZADORES DO SEU SISTEMA DE LANDING PAGES
+    // ============================================================
+    function renderNav() {
+      const nav = document.getElementById('category-nav');
+      nav.innerHTML = '';
+      categories.filter(c => c.active !== false).forEach((cat, index) => {
         const btn = document.createElement('button');
-        btn.className = `category-btn ${activeCategory === cat.id ? 'active' : ''}`;
+        btn.className = `nav-btn ${index === 0 ? 'active' : ''}`;
         btn.textContent = cat.name;
-        btn.onclick = () => {
-          activeCategory = cat.id;
-          renderCategories();
-          renderProducts();
-        };
-        tabsArea.appendChild(btn);
+        btn.onclick = () => switchCategory(cat.id, btn);
+        nav.appendChild(btn);
       });
     }
 
-    // RENDERIZAR CARDS DOS PRODUTOS
-    function renderProducts() {
-      const grid = document.getElementById('products-list');
-      grid.innerHTML = '';
-
-      const filtered = activeCategory === 'todos' 
-        ? mockProducts 
-        : mockProducts.filter(p => p.category_id === activeCategory);
-
-      filtered.forEach(prod => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.onclick = () => openProductModal(prod);
-
-        card.innerHTML = `
-          <div class="product-image-wrapper">
-            <img src="${prod.image_url}" alt="${prod.title}" class="product-image">
-          </div>
-          <div class="product-info">
-            <h3 class="product-title">${prod.title}</h3>
-            <p class="product-description-excerpt">${prod.description}</p>
-            <div class="product-footer">
-              <span class="product-price">R$ ${prod.price.toFixed(2).replace('.',',')}</span>
-              <span class="view-more-badge">Ver mais →</span>
-            </div>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    // ABRIR DETALHES DO PRODUTO (NOVA FUNÇÃO PEDIDA)
-    function openProductModal(product) {
-      document.getElementById('modal-img').src = product.image_url;
-      document.getElementById('modal-title').textContent = product.title;
-      document.getElementById('modal-price').textContent = `R$ ${product.price.toFixed(2).replace('.',',')}`;
-      document.getElementById('modal-desc').textContent = product.description;
+    function renderCategoryPages() {
+      const container = document.getElementById('pages-container');
       
-      // Atualiza a foto principal na galeria interna do produto também
-      const galleryArea = document.getElementById('modal-gallery-area');
-      galleryArea.innerHTML = `
-        <img src="${product.image_url}" class="modal-gallery-img" style="opacity:0.8">
-        <img src="${product.image_url}" class="modal-gallery-img" style="filter: hue-rotate(10deg);">
-        <img src="${product.image_url}" class="modal-gallery-img" style="filter: brightness(0.9);">
-      `;
+      // Limpa páginas antigas preservando a de login admin
+      const adminPage = document.getElementById('page-admin-login');
+      container.innerHTML = '';
+      container.appendChild(adminPage);
 
-      // Define a ação do botão de pedido
-      document.getElementById('modal-order-btn').onclick = () => {
-        const textoWhatsApp = encodeURIComponent(`Olá! Gostaria de encomendar o produto: ${product.title}`);
-        window.open(`https://wa.me/5513999999999?text=${textoWhatsApp}`, '_blank');
+      categories.filter(c => c.active !== false).forEach((cat, index) => {
+        const pageDiv = document.createElement('div');
+        pageDiv.id = `page-${cat.id}`;
+        pageDiv.className = `page ${index === 0 ? 'active' : ''}`;
+
+        const grid = document.createElement('div');
+        grid.className = 'products-grid';
+
+        // Filtra produtos desta categoria
+        const catProducts = products.filter(p => p.category === cat.id);
+        
+        if (catProducts.length === 0) {
+          grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color: var(--creme-escuro); padding: 40px 0;">Nenhum item nesta poção por enquanto...</p>`;
+        } else {
+          catProducts.forEach(prod => {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            // Configura o clique no card inteiro para abrir a nova função "Ver Mais"
+            card.onclick = () => openProductModal(prod);
+
+            card.innerHTML = `
+              <div class="product-img-container">
+                <img src="${prod.image_url || 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500'}" alt="${prod.name}">
+              </div>
+              <div class="product-info">
+                <h3 class="product-title">${prod.name}</h3>
+                <p class="product-desc">${prod.description || 'Delícia artesanal da Lunária Confeitaria feita com ingredientes selecionados.'}</p>
+                <div class="product-meta">
+                  <span class="product-price">R$ ${Number(prod.price).toFixed(2)}</span>
+                  <button class="btn-add" onclick="event.stopPropagation(); addToCart('${prod.id}', '${prod.name}', ${prod.price})">Adicionar</button>
+                </div>
+              </div>
+            `;
+            grid.appendChild(card);
+          });
+        }
+
+        pageDiv.appendChild(grid);
+        container.appendChild(pageDiv);
+      });
+    }
+
+    function switchCategory(catId, btnElement) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      
+      const targetPage = document.getElementById(`page-${catId}`);
+      if (targetPage) targetPage.classList.add('active');
+      if (btnElement) btnElement.classList.add('active');
+    }
+
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const p = document.getElementById(`page-${pageId}`);
+      if (p) p.classList.add('active');
+    }
+
+    // ============================================================
+    //  NOVA FUNÇÃO: ENTRAR NO PRODUTO (MODAL/VER MAIS)
+    // ============================================================
+    function openProductModal(product) {
+      const modal = document.getElementById('product-modal');
+      
+      document.getElementById('modal-product-img').src = product.image_url || 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500';
+      document.getElementById('modal-product-title').textContent = product.name;
+      document.getElementById('modal-product-desc').textContent = product.description || 'Uma receita mágica exclusiva da nossa cozinha, preparada com amor, equilíbrio de sabores e todo o aconchego que você merece.';
+      document.getElementById('modal-product-price').textContent = `R$ ${Number(product.price).toFixed(2)}`;
+      
+      const actionBtn = document.getElementById('modal-product-action');
+      actionBtn.onclick = () => {
+        addToCart(product.id, product.name, product.price);
+        closeProductModal(true);
       };
 
-      document.getElementById('product-modal').classList.add('active');
+      modal.classList.add('active');
     }
 
-    // FECHAR MODAL
-    function closeProductModal(event = null, forced = false) {
-      if (forced || event.target.classList.contains('modal-overlay')) {
+    function closeProductModal(forced = false, event = null) {
+      if (forced || event.target.id === 'product-modal') {
         document.getElementById('product-modal').classList.remove('active');
       }
     }
 
-    // TOAST
+    // ============================================================
+    //  REGRAS DE NEGÓCIO (CARRINHO & UTILS)
+    // ============================================================
+    function addToCart(id, name, price) {
+      if (!cart[id]) {
+        cart[id] = { name, price, qty: 0 };
+      }
+      cart[id].qty++;
+      updateCartSummary();
+      showToast(`✓ ${name} adicionado à sacola!`);
+    }
+
+    function updateCartSummary() {
+      const totalItems = Object.values(cart).reduce((acc, item) => acc + item.qty, 0);
+      const summary = document.getElementById('cart-summary');
+      if (totalItems > 0) {
+        summary.style.display = 'block';
+        document.getElementById('cart-count').textContent = totalItems;
+      } else {
+        summary.style.display = 'none';
+      }
+    }
+
+    function checkoutWhatsApp() {
+      let text = `🔮 *Novo Pedido - Lunária Confeitaria* 🔮\n\n`;
+      let total = 0;
+      
+      Object.values(cart).forEach(item => {
+        const sub = item.price * item.qty;
+        total += sub;
+        text += `• ${item.qty}x *${item.name}* (R$ ${sub.toFixed(2)})\n`;
+      });
+      
+      text += `\n💰 *Total:* R$ ${total.toFixed(2)}`;
+      const encoded = encodeURIComponent(text);
+      window.open(`https://wa.me/5513999999999?text=${encoded}`, '_blank'); // Altere para seu número real
+    }
+
     function showToast(msg) {
       const t = document.getElementById('toast');
       t.textContent = msg;
@@ -536,12 +620,15 @@
       setTimeout(() => t.classList.remove('show'), 2500);
     }
 
-    // INICIALIZAÇÃO
-    window.addEventListener('DOMContentLoaded', () => {
-      renderCategories();
-      renderProducts();
-      showToast('✓ Menu Lunária carregado!');
-    });
+    function loginAdmin() {
+      const pass = document.getElementById('admin-password').value;
+      if (pass === 'suasenha') {
+        showToast('Acesso concedido!');
+        // Redirecionar ou abrir painel de adição de fotos/produtos
+      } else {
+        showToast('Senha incorreta.');
+      }
+    }
   </script>
 </body>
 </html>
